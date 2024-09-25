@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
+    "./presets/**/*.{js,vue,ts}",
     "./components/**/*.{js,vue,ts}",
     "./layouts/**/*.vue",
     "./pages/**/*.vue",
@@ -11,6 +12,6 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [require('tailwindcss-primeui')]
 }
 

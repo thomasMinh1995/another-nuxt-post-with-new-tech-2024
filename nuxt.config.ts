@@ -9,4 +9,14 @@ export default defineNuxtConfig({
     },
   },
   css: ['~/assets/css/main.css'],
+  modules: [
+    '@primevue/nuxt-module'
+],
+primevue: {
+    options: {
+        unstyled: true
+    },
+    usePrimeVue: true,
+    importPT: { as: 'Aura', from: '~/presets/aura' }
+}
 })
