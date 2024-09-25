@@ -1,67 +1,37 @@
 <template>
   <div>
     <h1>Test TanStack Vue Query</h1>
-    <button @click="refetch">Refetch Data</button>
-    <div v-if="isLoading">Loading...</div>
-    <div v-if="error">Error: {{ error.message }}</div>
-    <div v-if="data">
-      <pre>{{ data.posts }}</pre>
-      <p>Total Posts: {{ totalCount }}</p>
-      <p>Current Page: {{ currentPage }} of {{ totalPages }}</p>
-      <button @click="goToPreviousPage" :disabled="currentPage === 1">Previous</button>
-      <button @click="goToNextPage" :disabled="currentPage === totalPages">Next</button>
+    <button @click="postsStore.fetchPosts">Refetch Data</button>
+    <div v-if="postsStore.isLoading">Loading...</div>
+    <div v-if="postsStore.error">Error: {{ postsStore.error }}</div>
+    <div v-if="postsStore.posts.length">
+      <pre>{{ postsStore.posts }}</pre>
+      <p>Total Posts: {{ postsStore.totalCount }}</p>
+      <p>Current Page: {{ postsStore.currentPage }} of {{ postsStore.totalPages }}</p>
+      <button @click="goToPreviousPage" :disabled="postsStore.currentPage === 1">Previous</button>
+      <button @click="goToNextPage" :disabled="postsStore.currentPage === postsStore.totalPages">Next</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { useQuery } from "@tanstack/vue-query";
+import { usePostsStore } from '@/stores/posts';
 
-const currentPage = ref(1);
-const limit = 10;
-// Initialize refs for total count and pages
-const totalCount = ref(0);
-const totalPages = ref(0);
+const postsStore = usePostsStore();
 
-const fetcher = async (page) => {
-  const response = await fetch(`https://mock-api-kglw.onrender.com/posts?page=${page}&limit=${limit}`);
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-  const data = await response.json();
-  return {
-    posts: data,
-    headers: response.headers
-  };
-};
-
-const { data, isLoading, error, refetch } = useQuery({
-  queryKey: ['posts', currentPage],
-  queryFn: () => fetcher(currentPage.value),
-  keepPreviousData: true,
-});
-
-// Watch for changes in data to update totalCount and totalPages
-watch(data, (newData) => {
-  if (newData) {
-    totalCount.value = parseInt(newData.headers.get('x-total-count'), 10);
-    totalPages.value = parseInt(newData.headers.get('x-total-pages'), 10);
-  }
-});
+// Fetch posts initially when the component mounts
+postsStore.fetchPosts();
 
 // Functions to navigate pages
 const goToPreviousPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-    refetch();
+  if (postsStore.currentPage > 1) {
+    postsStore.setCurrentPage(postsStore.currentPage - 1);
   }
 };
 
 const goToNextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-    refetch();
+  if (postsStore.currentPage < postsStore.totalPages) {
+    postsStore.setCurrentPage(postsStore.currentPage + 1);
   }
 };
-
 </script>
