@@ -13,7 +13,9 @@
     "@pinia/nuxt": "^0.5.4",
     "@tanstack/vue-query": "^5.56.2",
     "nuxt": "^3.13.0",
-    "vue": "latest",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.0.7",
+    "vue": "^3",
     "vue-router": "latest"
   },
   "devDependencies": {
