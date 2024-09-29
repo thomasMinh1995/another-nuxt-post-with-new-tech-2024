@@ -18,7 +18,7 @@
       </div>
     </NuxtLazyHydrate>
     <NuxtLazyHydrate when-visible>
-      <DataTab
+      <DataTable
         :value="posts"
         :paginator="true"
         :rows="10"
@@ -45,7 +45,7 @@
             <p>{{ data.created_by.first_name }} {{ data.created_by.last_name }}</p>
           </template>
         </Column>
-      </DataTab le>
+      </DataTable>
     </NuxtLazyHydrate>
 
     <NuxtLazyHydrate when-visible>
