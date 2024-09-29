@@ -11,6 +11,10 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    require('tailwindcss'),
+    require('autoprefixer'),
+    require('tailwindcss-primeui')
+  ],
 }
 

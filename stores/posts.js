@@ -13,8 +13,10 @@ export const usePostsStore = defineStore("posts", {
   },
   actions: {
     async fetchPosts() {
+      if (this.isLoading) return; // Prevent duplicate calls
       this.isLoading = true;
       this.error = null;
+    
       try {
         const response = await fetch(
           `https://mock-api-kglw.onrender.com/posts?page=${this.currentPage}&limit=${this.limit}`
@@ -43,8 +45,10 @@ export const usePostsStore = defineStore("posts", {
       }
     },
     setCurrentPage(page) {
-      this.currentPage = page;
-      this.fetchPosts(); 
+      if (this.currentPage !== page) {
+        this.currentPage = page;
+        this.fetchPosts(); 
+      }
     },
     setTotalCount(count) {
       this.totalCount = count;
