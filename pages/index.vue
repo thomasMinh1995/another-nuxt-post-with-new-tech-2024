@@ -5,10 +5,11 @@
     </h1>
     <Button
       label="Refetch Data"
-      @click="debouncedFetchPosts"
+      @click="refetchPosts"
       class="!inline-block !mb-4 !px-5 !py-2 !bg-blue-600 !text-white !rounded-lg !hover:bg-blue-700 !transition !duration-200 !shadow-md"
     />
-    <p class="mt-4 text-gray-700 text-center">Total Posts: {{ totalCount }}</p>
+    <p class="mt-4 text-gray-700 text-center">Total Posts: {{ postsStore.totalCount }}</p>
+
     <NuxtLazyHydrate when-idle>
       <div v-if="isLoading" class="text-center text-gray-500 animate-pulse">
         Loading...
@@ -17,14 +18,15 @@
         Error: {{ error }}
       </div>
     </NuxtLazyHydrate>
+
     <NuxtLazyHydrate when-visible>
       <DataTable
-        :value="posts"
+        :value="data"
         :paginator="true"
         :rows="10"
-        :totalRecords="totalCount"
+        :totalRecords="postsStore.totalCount"
         :lazy="true"
-        @page="debouncedOnPageChange"
+        @page="onPageChange"
         class="!mt-6 !border !border-gray-300 !rounded-lg !shadow-sm !overflow-hidden"
       >
         <Column field="title" header="Title">
@@ -38,7 +40,9 @@
           </template>
         </Column>
         <Column field="created_at" header="Created at">
-          <p>{{ new Date(data.created_at).toLocaleDateString() }}</p>
+          <template #body="{ data }">
+            <p>{{ new Date(data.created_at).toLocaleDateString() }}</p>
+          </template>
         </Column>
         <Column field="created_by" header="Created by">
           <template #body="{ data }">
@@ -61,7 +65,7 @@
           'NextPageLink',
           'LastPageLink',
         ]"
-        class="!text-blue-600 ! hover:text-blue-800"
+        class="!text-blue-600 !hover:text-blue-800"
       />
     </NuxtLazyHydrate>
   </div>
@@ -73,38 +77,21 @@ import { usePostsStore } from "@/stores/posts";
 import { debounce } from "lodash";
 
 const postsStore = usePostsStore();
-let isFetching = false;
 
 onMounted(() => {
-  fetchPosts();
+  refetch(); // Fetch initial posts
 });
 
-const isLoading = computed(() => postsStore.isLoading);
-const error = computed(() => postsStore.error);
-const posts = computed(() => postsStore.posts);
+// Destructure properties from fetchPosts method
+const { data, isLoading, error, refetch } = postsStore.fetchPosts();
 const totalCount = computed(() => postsStore.totalCount);
 const currentPage = computed(() => postsStore.currentPage);
-
-const fetchPosts = async (page = currentPage.value) => {
-  if (isFetching) return;
-  isFetching = true;
-
-  try {
-    await postsStore.fetchPosts(page);
-  } catch (err) {
-    console.error("Error fetching posts:", err);
-  } finally {
-    isFetching = false;
-  }
-};
-
-const debouncedFetchPosts = debounce(fetchPosts, 300);
 
 const onPageChange = (event) => {
   const newPage = event.page + 1;
   if (newPage !== currentPage.value) {
     postsStore.setCurrentPage(newPage);
-    fetchPosts(newPage);
+    refetch(); // Refetch posts for the new page
   }
 };
 

@@ -1,3 +1,6 @@
+import { defineStore } from 'pinia';
+import { useQuery } from '@tanstack/vue-query';
+
 export const usePostsStore = defineStore("posts", {
   state: () => ({
     currentPage: 1,
@@ -6,55 +9,75 @@ export const usePostsStore = defineStore("posts", {
     error: null,
     isLoading: false,
     posts: [],
-    postDetail: null, 
+    postDetail: null,
   }),
+
   getters: {
     totalPages: (state) => Math.ceil(state.totalCount / state.limit),
   },
+
   actions: {
-    async fetchPosts() {
-      if (this.isLoading) return; // Prevent duplicate calls
-      this.isLoading = true;
-      this.error = null;
-    
-      try {
+    setCurrentPage(page) {
+      if (this.currentPage !== page) {
+        this.currentPage = page;
+      }
+    },
+
+    setTotalCount(count) {
+      this.totalCount = count;
+    },
+
+    setError(error) {
+      this.error = error;
+    },
+
+    fetchPostDetail(id) {
+      const fetcher = async () => {
+        const response = await fetch(`https://mock-api-kglw.onrender.com/posts/${id}`);
+        if (!response.ok) throw new Error("Network response was not ok");
+        return await response.json();
+      };
+
+      // Return the query object directly
+      return useQuery({
+        queryKey: ['postDetail', id],
+        queryFn: fetcher,
+        onSuccess: (data) => {
+          this.postDetail = data; // Store post detail in state
+        },
+        onError: (error) => {
+          this.setError(error.message); // Set error in state
+        },
+      });
+    },
+
+    fetchPosts() {
+      const fetcher = async () => {
         const response = await fetch(
           `https://mock-api-kglw.onrender.com/posts?page=${this.currentPage}&limit=${this.limit}`
         );
         if (!response.ok) throw new Error("Network response was not ok");
+        
         const data = await response.json();
-        this.posts = data;
+        
+        // Set total count from headers
         this.setTotalCount(parseInt(response.headers.get("x-total-count"), 10));
-      } catch (error) {
-        this.setError(error.message);
-      } finally {
-        this.isLoading = false;
-      }
+        
+        return data;
+      };
+
+      // Return the query object directly
+      return useQuery({
+        queryKey: ['posts', this.currentPage],
+        queryFn: fetcher,
+        staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+        onSuccess: (data) => {
+          this.posts = data; // Store posts in state
+        },
+        onError: (error) => {
+          this.setError(error.message); // Set error in state
+        },
+      });
     },
-    async fetchPostDetail(id) { // New action to fetch single post
-      this.isLoading = true;
-      this.error = null;
-      try {
-        const response = await fetch(`https://mock-api-kglw.onrender.com/posts/${id}`);
-        if (!response.ok) throw new Error("Network response was not ok");
-        this.postDetail = await response.json();
-      } catch (error) {
-        this.setError(error.message);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    setCurrentPage(page) {
-      if (this.currentPage !== page) {
-        this.currentPage = page;
-        this.fetchPosts(); 
-      }
-    },
-    setTotalCount(count) {
-      this.totalCount = count;
-    },
-    setError(error) {
-        this.error = error;
-      },
   },
 });
